@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cosas sobre mí · Práctica</title>
+<style>
+:root{--bg:#fbf7f0;--ink:#1f2340;--mut:#6b6f8a;--card:#fff;--line:#d9d4e6;--blue:#3b4cc0;--red:#d6283b;--ok:#1f8a4c;--okbg:#e3f5ea;--kobg:#fde6e8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15172b;--ink:#eceefb;--mut:#a3a7c4;--card:#1f2240;--line:#3a3e66;--blue:#8c9bff;--red:#ff7a89;--ok:#5fd28f;--okbg:#17382a;--kobg:#45202a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Georgia,"Iowan Old Style",serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:2rem;margin:.2em 0;color:var(--red)}
+h2{font-size:1.2rem;color:var(--blue);margin:0 0 .6em}
+.sub{color:var(--mut);margin:0 0 1em;font-style:italic}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin:18px 0}
+.recap{border-left:5px solid var(--red)}
+.recap b{color:var(--red)}
+button{font:inherit;cursor:pointer;border:1px solid var(--blue);background:transparent;color:var(--blue);border-radius:6px;padding:6px 14px;margin:4px 6px 4px 0}
+button.main{background:var(--blue);color:#fff}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.msg{margin-top:8px;font-weight:bold}
+.row{display:flex;gap:10px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.row>span{flex:1 1 200px}
+select,input[type=text]{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:100%}
+.ok{background:var(--okbg)!important;border-color:var(--ok)!important}
+.ko{background:var(--kobg)!important;border-color:var(--red)!important}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.col button{display:block;width:100%;text-align:left;margin:0 0 8px;padding:9px 12px}
+.sel{background:var(--blue)!important;color:#fff!important}
+.done{opacity:.45;pointer-events:none;border-color:var(--ok)!important}
+.bank,.ans{display:flex;flex-wrap:wrap;gap:6px;min-height:46px;padding:8px;border:2px dashed var(--line);border-radius:8px;margin:8px 0}
+.ans{border-style:solid}
+.opt{display:block;width:100%;text-align:left;margin:5px 0}
+.bar{height:8px;background:var(--line);border-radius:4px;margin-bottom:12px}
+.bar i{display:block;height:100%;width:0;background:var(--ok);border-radius:4px;transition:width .3s}
+</style></head><body><main>
+<h1>Cosas sobre mí</h1>
+<p class="sub">Expresión oral · Je suis capable de présenter et décrire un document visuel</p>
+
+<section class="recap"><h2>Recuerda</h2>
+<p><b>Creo que</b> / <b>Pienso que</b> = je crois que / je pense que<br>
+<b>Me gusta</b> = j'aime · <b>hay</b> = il y a<br>
+una anciana = une personne âgée · una chaqueta de cuero = une veste en cuir · dar un beso en la mejilla = donner un baiser sur la joue · el patio = la cour · macetas de flores = des pots de fleurs · tierno/a = tendre</p></section>
+
+<section><h2>1 · Une cada palabra con su traducción</h2>
+<p class="sub">Clic en una palabra española, luego en su traducción.</p>
+<div class="grid"><div class="col" id="mA"></div><div class="col" id="mB"></div></div>
+<div class="msg" id="mMsg"></div><button onclick="initMatch()">Volver a empezar</button></section>
+
+<section><h2>2 · ¿Qué significa?</h2><div class="bar"><i id="qBar"></i></div><div id="quiz"></div></section>
+
+<section><h2>3 · Completa las frases</h2>
+<div id="fill"></div>
+<button class="main" onclick="checkFill()">Comprobar</button><button onclick="showFill()">Ver soluciones</button><button onclick="initFill()">Borrar</button>
+<div class="msg" id="fMsg"></div></section>
+
+<section><h2>4 · Ordena las frases</h2>
+<p class="sub">Clic en las palabras para construir la frase. Clic en una palabra de la frase para quitarla.</p>
+<div id="ord"></div></section>
+
+<section><h2>5 · Describe la fotografía</h2>
+<p class="sub">Completa la descripción con las palabras del banco.</p>
+<p id="desc" style="line-height:2.4"></p>
+<button class="main" onclick="checkDesc()">Comprobar</button><button onclick="initDesc()">Borrar</button>
+<div class="msg" id="dMsg"></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const norm=s=>s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");
+
+/* 1 matching */
+const pairs=[["una anciana","une personne âgée"],["una chaqueta de cuero","une veste en cuir"],["dar un beso en la mejilla","donner un baiser sur la joue"],["el patio","la cour"],["macetas de flores","des pots de fleurs"],["tierno/a","tendre"]];
+let pick=null,found=0;
+function initMatch(){pick=null;found=0;$("mMsg").textContent="";
+ const A=$("mA"),B=$("mB");A.innerHTML=B.innerHTML="";
+ pairs.forEach((p,i)=>{const b=document.createElement("button");b.textContent=p[0];b.dataset.i=i;b.onclick=()=>{A.querySelectorAll(".sel").forEach(x=>x.classList.remove("sel"));b.classList.add("sel");pick=b};A.appendChild(b)});
+ shuffle(pairs.map((p,i)=>[p[1],i])).forEach(([t,i])=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{
+  if(!pick){$("mMsg").textContent="Elige primero una palabra española.";return}
+  if(pick.dataset.i==i){pick.classList.remove("sel");pick.classList.add("done");b.classList.add("done");pick=null;found++;
+   $("mMsg").textContent=found==pairs.length?"¡Muy bien! 🎉 Todo correcto.":found+" / "+pairs.length}
+  else{b.classList.add("ko");setTimeout(()=>b.classList.remove("ko"),500);$("mMsg").textContent="Inténtalo otra vez."}};B.appendChild(b)})}
+
+/* 2 quiz */
+const Q=[["¿Qué significa « hay » ?",["il y a","j'aime","je crois"],0],["¿Qué significa « Me gusta » ?",["il y a","j'aime","je pense que"],1],["« Creo que » =",["je crois que","je veux","j'ai"],0],["« El patio » =",["le pays","la cour","la photo"],1],["« Dar un beso en la mejilla » =",["donner un baiser sur la joue","donner un cadeau","dire bonjour"],0],["« Tierno » =",["têtu","tendre","triste"],1]];
+let qi=0,qs=0;
+function showQ(){const box=$("quiz");$("qBar").style.width=(qi/Q.length*100)+"%";
+ if(qi>=Q.length){box.innerHTML="<p class='msg'>Puntuación: "+qs+" / "+Q.length+"</p><button class='main' onclick='qi=0;qs=0;showQ()'>Volver a empezar</button>";return}
+ const q=Q[qi];box.innerHTML="<p><b>"+q[0]+"</b></p>";
+ q[1].forEach((t,k)=>{const b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=()=>{
+  box.querySelectorAll(".opt").forEach(x=>x.disabled=true);
+  if(k==q[2]){b.classList.add("ok");qs++}else{b.classList.add("ko");box.querySelectorAll(".opt")[q[2]].classList.add("ok")}
+  setTimeout(()=>{qi++;showQ()},900)};box.appendChild(b)})}
+
+/* 3 fill */
+const F=[["___ están en el patio de la anciana. (je crois que)","creo que"],["___ la foto porque es muy tierna. (j'aime)","me gusta"],["___ macetas de flores y plantas. (il y a)","hay"],["___ la anciana es la abuela del joven. (je pense que)","pienso que"],["La anciana le da un ___ en la mejilla.","beso"],["El joven lleva una ___ de cuero negra.","chaqueta"]];
+function initFill(){$("fMsg").textContent="";$("fill").innerHTML=F.map((f,i)=>{const [a,b]=f[0].split("___");return `<div class="row"><span>${a}<input type="text" id="f${i}" size="12" autocomplete="off" autocapitalize="none">${b}</span></div>`}).join("")}
+function checkFill(){let n=0;F.forEach((f,i)=>{const e=$("f"+i),r=norm(e.value)==norm(f[1]);e.className=r?"ok":"ko";if(r)n++});$("fMsg").textContent=n+" / "+F.length}
+function showFill(){F.forEach((f,i)=>{$("f"+i).value=f[1];$("f"+i).className="ok"})}
+
+/* 4 order */
+const O=["Creo que están en el patio","Pienso que la anciana es la abuela","Me gusta la foto porque es muy tierna","El joven lleva una chaqueta de cuero negra","La anciana tiene el pelo gris"];
+function initOrd(){$("ord").innerHTML="";O.forEach((s,idx)=>{const w=s.split(" "),d=document.createElement("div");
+ d.innerHTML='<div class="ans"></div><div class="bank"></div><button class="main">Comprobar</button><button>Mezclar</button><span class="msg"></span>';
+ const ans=d.children[0],bank=d.children[1],msg=d.children[4];
+ const fill=()=>{bank.innerHTML="";ans.innerHTML="";msg.textContent="";shuffle(w.map((t,k)=>[t,k])).forEach(([t,k])=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{(b.parentNode===bank?ans:bank).appendChild(b)};bank.appendChild(b)})};
+ d.children[2].onclick=()=>{const t=[...ans.children].map(x=>x.textContent).join(" ");const r=norm(t)==norm(s);msg.textContent=r?"✔ ¡Correcto!":"✘ Inténtalo otra vez.";ans.className="ans "+(r?"ok":"ko")};
+ d.children[3].onclick=fill;fill();$("ord").appendChild(d);$("ord").appendChild(document.createElement("hr"))})}
+
+/* 5 description */
+const DT='La fotografía se titula "Cosas sobre mí". En la foto [hay] dos personas: un joven y una [anciana]. El joven lleva una [chaqueta] de cuero negra. [Creo que] están en el patio porque hay [macetas] de flores. [Me gusta] la foto porque es muy [tierna].';
+function initDesc(){$("dMsg").textContent="";const bank=[];
+ const h=DT.replace(/\[(.+?)\]/g,(m,a)=>{bank.push(a);return `<select data-a="${a}"><option value="">…</option>%O%</select>`});
+ const opts=shuffle(bank).map(x=>`<option>${x}</option>`).join("");
+ $("desc").innerHTML=h.replaceAll("%O%",opts)+"<br><small class='sub'>Banco: "+shuffle(bank).join(" · ")+"</small>"}
+function checkDesc(){let n=0,t=0;document.querySelectorAll("#desc select").forEach(s=>{t++;const r=s.value==s.dataset.a;s.className=r?"ok":"ko";if(r)n++});$("dMsg").textContent=n+" / "+t+(n==t?" 🎉":"")}
+
+initMatch();showQ();initFill();initOrd();initDesc();
+</script></body></html>
